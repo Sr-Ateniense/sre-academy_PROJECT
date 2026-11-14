@@ -17,4 +17,4 @@ These screenshots were captured from the local Minikube deployment. Email accoun
 
 Only include screenshots of the deployment you actually ran. Keep SMTP passwords and other credentials out of screenshots.
 
-After enabling GitHub Actions, add `13-github-actions-ci-success.png` for a successful validation/build run and `14-github-actions-minikube-deploy.png` for a successful deployment to the local Minikube cluster.
+13. `13-github-actions-ci-success.png` — successful GitHub-hosted CI validation for commit `ee31df3` on `main`. The app checks, smoke test, Kustomize render, and Docker build passed. This screenshot predates removal of the PC-specific deployment job; the current workflow runs portable CI only.

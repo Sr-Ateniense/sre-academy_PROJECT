@@ -9,7 +9,7 @@ A small application built for the SRE Academy final project. It creates a real s
 - Scrape it with Prometheus and evaluate operational alert rules.
 - View service behavior in a provisioned Grafana dashboard.
 - Route Prometheus alerts through Alertmanager.
-- Keep the deployment reproducible with Kustomize-managed Kubernetes resources and a CI/CD workflow.
+- Keep the deployment reproducible with Kustomize-managed Kubernetes resources and automated CI validation.
 
 ## Architecture
 
@@ -40,6 +40,17 @@ The `sre-academy` namespace contains the app. Prometheus, Grafana, and Alertmana
 | `GET /api/demo?scenario=error` | Generate a 500 response for error-rate demonstrations |
 
 The app exports `sre_demo_http_requests_total`, `sre_demo_http_request_duration_seconds` (histogram), `sre_demo_orders_created_total`, and `sre_demo_process_uptime_seconds`. The `/metrics` endpoint itself is excluded from request counters to prevent scrape traffic from affecting the service signals.
+
+## Prerequisites
+
+The examples use Windows PowerShell and require Docker Desktop running with Linux containers, Minikube configured to use the Docker driver, and `kubectl`. Node.js 24 or compatible is needed to run the API or its smoke test directly. Verify the tools before deploying:
+
+```powershell
+docker version
+minikube version
+kubectl version --client
+node --version
+```
 
 ## Local development
 
@@ -110,18 +121,17 @@ For local experimentation, generate the error/slow scenarios and inspect Prometh
 
 The provisioned **SRE Academy - Orders API** dashboard includes request rate, 5xx error ratio, p95 latency, request volume by status and route, latency percentiles, and orders created. Its JSON and provisioning are in `k8s/40-grafana.yaml`.
 
-## Infrastructure as code and CI/CD
+## Infrastructure as code and CI validation
 
 The Kubernetes resources are version-controlled declarative infrastructure. Kustomize composes the namespaces, app, Prometheus rules, Alertmanager, and Grafana from `k8s/kustomization.yaml`; preview or apply them with `kubectl kustomize k8s/` and `kubectl apply -k k8s/`. Kubernetes documents [Kustomize support in kubectl](https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/).
 
-GitHub Actions in `.github/workflows/ci.yml` runs CI for pushes and pull requests: it checks JavaScript syntax, runs an API smoke test that creates an order and checks `/metrics`, renders the Kustomize resources, and builds the Docker image. Run the same smoke test locally with `node --test app/server.test.js`. To run the local Minikube CD job, publish this repository to GitHub and set up a self-hosted runner on the same Windows machine as Docker Desktop and Minikube:
+GitHub Actions in `.github/workflows/ci.yml` runs CI on pushes and pull requests using GitHub-hosted runners. It checks JavaScript syntax, runs an API smoke test that creates an order and checks `/metrics`, renders the Kustomize resources, and builds the Docker image. The same smoke test can be run locally with `node --test app/server.test.js`. See the [workflow runs](https://github.com/Sr-Ateniense/sre-academy_PROJECT/actions) and the captured evidence below.
 
-1. In the repository, open **Settings → Actions → Runners → New self-hosted runner**. Configure a Windows runner and add the custom label `minikube`.
-2. Run the runner in the Windows user session that can access Docker Desktop, Minikube, and the `kubectl` context. Keep Minikube running for deployments.
-3. In **Settings → Secrets and variables → Actions → Variables**, create the repository variable `ENABLE_MINIKUBE_CD` with value `true`.
-4. Push a change to the repository's default branch. After CI passes, the local runner builds the commit-tagged app image, loads it into Minikube, updates the `sre-demo-app` Deployment, and waits for the rollout.
+The CI workflow does not deploy to a long-running cluster. To reproduce the full deployment, use the local Minikube steps earlier in this README; no repository-specific runner or Actions variable is required. Kustomize provides the declarative infrastructure, while the evaluator can create and inspect the Kubernetes resources with `kubectl apply -k k8s/`.
 
-The CD job is disabled until the repository variable is set and runs only on pushes to the repository's default branch; pull-request validation stays on GitHub-hosted runners. The full stack is provisioned with Kustomize, while the CD job updates only the app image. See GitHub's [self-hosted runner setup](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/add-runners) and [deployment environment guidance](https://docs.github.com/en/actions/concepts/workflows-and-actions/deployment-environments). Do not run untrusted pull-request workflows on a self-hosted runner.
+The first GitHub Actions run succeeded for commit `ee31df3` on `main`: app syntax, API/metrics smoke test, Kustomize rendering, and Docker image build all passed. The screenshot records that run before the PC-specific Minikube job was removed.
+
+![GitHub Actions CI validation succeeded](screenshots/13-github-actions-ci-success.png)
 
 ## Evidence screenshots
 
@@ -142,7 +152,7 @@ The `screenshots/` folder contains evidence captured from the local deployment:
 
 Together, these screenshots document the custom app and metrics, Kubernetes deployment, Prometheus rules and target health, Grafana traffic dashboard, and firing/resolved email notifications.
 
-After pushing the project to GitHub and running the workflows, add `13-github-actions-ci-success.png` and, after enabling the self-hosted runner, `14-github-actions-minikube-deploy.png` as evidence for the CI/CD bonus.
+`13-github-actions-ci-success.png` records the successful GitHub-hosted CI run. Kubernetes deployment evidence is documented separately in the local Minikube screenshots above.
 
 ## Cleanup
 
