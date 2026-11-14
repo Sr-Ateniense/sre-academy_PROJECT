@@ -1,0 +1,21 @@
+# Copy this file to alertmanager-email.local.yml and replace every example value.
+# The local file is ignored by Git and is stored in a Kubernetes Secret.
+global:
+  smtp_smarthost: smtp.example.com:587
+  smtp_from: sre-alerts@example.com
+  smtp_auth_username: sre-alerts@example.com
+  smtp_auth_password: REPLACE_WITH_PROVIDER_APP_PASSWORD
+  smtp_require_tls: true
+
+route:
+  receiver: email
+  group_by: ["alertname", "severity"]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 4h
+
+receivers:
+  - name: email
+    email_configs:
+      - to: replace-with-your-address@example.com
+        send_resolved: true

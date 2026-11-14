@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Compose the full local SRE stack from version-controlled Kubernetes resources.
+resources:
+  - 00-namespace.yaml
+  - 10-app.yaml
+  - 20-prometheus.yaml
+  - 30-alertmanager.yaml
+  - 40-grafana.yaml

@@ -1,0 +1,11 @@
+# Apply only after creating the alertmanager-email-config Secret from the local
+# alertmanager-email.local.yml file. JSON merge-patch replaces the volume list.
+spec:
+  template:
+    spec:
+      volumes:
+        - name: config
+          secret:
+            secretName: alertmanager-email-config
+        - name: data
+          emptyDir: {}

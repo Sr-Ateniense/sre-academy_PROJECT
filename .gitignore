@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+k8s/alertmanager-email.local.yml
+*.log
+node_modules/
+.DS_Store
